@@ -1,0 +1,1743 @@
+<!DOCTYPE html>
+<html lang="th" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AMR Speed, Independent Payload &amp; Wheel Traction Calculator — Oriental Motor BLH &amp; BLV-R</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Noto Sans Thai, Inter, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Noto Sans Thai"', 'Inter', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            slate: {
+              850: '#151e32',
+              925: '#0c1322',
+              950: '#070b14',
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    /* Custom dark industrial range slider */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      background: transparent;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-runnable-track {
+      height: 6px;
+      border-radius: 999px;
+      background: #1e293b;
+      border: 1px solid #334155;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #06b6d4;
+      border: 2px solid #0f172a;
+      box-shadow: 0 0 10px rgba(6, 182, 212, 0.55);
+      margin-top: -7px;
+      transition: transform 0.15s ease, background-color 0.15s ease;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+      background: #22d3ee;
+    }
+
+    /* Custom subtle dark scrollbar */
+    ::-webkit-scrollbar {
+      width: 7px;
+      height: 7px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+
+    /* Responsive Canvas Styling */
+    #amr-blueprint-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-200 antialiased selection:bg-cyan-500 selection:text-slate-950 min-h-screen">
+
+  <!-- Toast Notification (Replaces alert) -->
+  <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+    <div class="bg-slate-900 text-slate-100 px-4 py-3 rounded-xl shadow-2xl border border-cyan-500/40 flex items-center gap-3 text-xs sm:text-sm font-medium">
+      <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse"></span>
+      <span id="toast-message">คัดลอกรายงานผลการคำนวณเรียบร้อยแล้ว</span>
+    </div>
+  </div>
+
+  <!-- Top Industrial Telemetry Header -->
+  <header class="bg-slate-900/95 backdrop-blur-md border-b border-slate-800 sticky top-0 z-30 shadow-lg shadow-black/30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+      <div class="flex items-center gap-3.5">
+        <!-- Industrial Drive Gear & Telemetry Icon -->
+        <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border border-cyan-500/40 flex items-center justify-center shadow-inner shrink-0">
+          <svg class="w-6 h-6 text-cyan-400" fill="none" stroke="currentColor" stroke-width="1.9" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="3.2" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z" />
+          </svg>
+        </div>
+        <div>
+          <div class="flex flex-wrap items-center gap-2">
+            <h1 class="text-base sm:text-lg font-bold tracking-tight text-white">
+              AMR Drive, Payload &amp; Traction Telemetry
+            </h1>
+            <span class="px-2 py-0.5 text-[11px] font-mono font-semibold rounded-md bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
+              Oriental Motor BLH &amp; BLV-R
+            </span>
+          </div>
+          <p class="text-xs text-slate-400">
+            คำนวณความเร็วเชิงเส้น โหลดขนบนรถ (Carrying) โหลดลากจูง (Towing) อิสระ และขีดจำกัดล้อฟรี (Wheel Slip Limit)
+          </p>
+        </div>
+      </div>
+
+      <!-- Header Controls -->
+      <div class="flex items-center gap-2.5 self-start md:self-auto">
+        <button type="button" onclick="resetDefaults()" class="px-3.5 py-2 rounded-xl text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          รีเซ็ตค่าเริ่มต้น (Reset)
+        </button>
+        <button type="button" onclick="copyReport()" class="px-4 py-2 rounded-xl text-xs font-semibold bg-cyan-500 hover:bg-cyan-400 text-slate-950 shadow-lg shadow-cyan-500/20 transition flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+          </svg>
+          คัดลอกรายงานวิศวกรรม
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Workspace -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+
+    <!-- System Architecture Banner -->
+    <div class="bg-slate-900/90 rounded-2xl border border-slate-800 px-4 py-3 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+      <div class="flex flex-wrap items-center gap-2.5">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 text-xs font-semibold">
+          <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+          2-Wheel Differential Drive (ขับเคลื่อน 2 ล้ออิสระ)
+        </span>
+        <span class="text-xs text-slate-400">
+          แยกคำนวณอิสระระหว่าง <strong class="text-emerald-400">Mode 1: ขนบนรถอย่างเดียว</strong> และ <strong class="text-amber-400">Mode 2: ลากจูงอย่างเดียว</strong> พร้อมตรวจสอบแรงเสียดทานหน้ายาง (<strong class="text-slate-200">Wheel Slip Check</strong>)
+        </span>
+      </div>
+      <div class="text-[11px] text-slate-400 font-mono bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 shrink-0">
+        g = 9.81 m/s² | Motors = 2 Units (L+R)
+      </div>
+    </div>
+
+    <!-- Main 12-Column Responsive Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- =====================================================================
+           LEFT COLUMN (5 COLS): INPUT PARAMETERS
+      ====================================================================== -->
+      <div class="lg:col-span-5 space-y-5">
+
+        <!-- SECTION 1: MOTOR DATABASE & SELECTION -->
+        <section class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl p-5 space-y-4">
+          <div class="flex items-center justify-between gap-2">
+            <h2 class="text-sm font-bold text-white flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center justify-center text-xs font-mono font-bold">1</span>
+              เลือกมอเตอร์ Oriental Motor (Motor Selector)
+            </h2>
+            <span id="selected-motor-badge" class="text-[11px] font-mono font-semibold px-2.5 py-1 rounded-lg bg-slate-950 text-cyan-300 border border-slate-700">
+              BLVR200K (200W)
+            </span>
+          </div>
+
+          <!-- Series Tabs -->
+          <div class="grid grid-cols-2 gap-2 p-1 bg-slate-950 rounded-xl border border-slate-800">
+            <button type="button" id="tab-BLH" onclick="selectSeries('BLH')"
+              class="py-2 px-3 rounded-lg text-xs font-semibold transition text-center">
+              <div>BLH Series</div>
+              <div class="text-[10px] font-normal opacity-80">24V DC (15W – 100W)</div>
+            </button>
+            <button type="button" id="tab-BLV-R" onclick="selectSeries('BLV-R')"
+              class="py-2 px-3 rounded-lg text-xs font-semibold transition text-center">
+              <div>BLV-R Series</div>
+              <div class="text-[10px] font-normal opacity-80">24V/48V AGV/AMR (60W – 400W)</div>
+            </button>
+          </div>
+
+          <!-- Motor Models Grid -->
+          <div id="motor-cards-grid" class="grid grid-cols-2 gap-2.5">
+            <!-- Dynamically rendered by JS -->
+          </div>
+
+          <!-- Editable Rated Torque & Speed -->
+          <div class="pt-3 border-t border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label for="input-torque" class="block text-[11px] font-medium text-slate-400 mb-1">
+                แรงบิดพิกัดต่อตัว (<span class="font-mono text-slate-200">T<sub>m</sub></span>)
+              </label>
+              <div class="relative">
+                <input type="number" id="input-torque" step="0.001" min="0.001" value="0.637"
+                  oninput="handleManualTorqueChange()"
+                  class="w-full font-mono text-sm font-semibold pl-3 pr-11 py-2 rounded-xl bg-slate-950 border border-slate-700 text-cyan-300 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 outline-none" />
+                <span class="absolute right-3 top-2.5 text-[11px] font-mono text-slate-500">N·m</span>
+              </div>
+            </div>
+
+            <div>
+              <label for="input-rpm" class="block text-[11px] font-medium text-slate-400 mb-1">
+                ความเร็วมอเตอร์ (<span class="font-mono text-slate-200">N<sub>m</sub></span>)
+              </label>
+              <div class="relative">
+                <input type="number" id="input-rpm" min="1" max="4500" step="10" value="3000"
+                  oninput="syncRpmFromInput()"
+                  class="w-full font-mono text-sm font-semibold pl-3 pr-11 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 outline-none" />
+                <span class="absolute right-3 top-2.5 text-[11px] font-mono text-slate-500">rpm</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- RPM Slider & Presets -->
+          <div class="space-y-1.5">
+            <input type="range" id="slider-rpm" min="100" max="4000" step="50" value="3000"
+              oninput="syncRpmFromSlider()" class="w-full" />
+            <div class="flex flex-wrap items-center justify-between gap-1.5">
+              <span class="text-[10px] font-mono text-slate-500">ความเร็วรอบด่วน:</span>
+              <div class="flex gap-1.5">
+                <button type="button" onclick="setRpm(1500)" class="px-2 py-0.5 text-[10px] font-mono rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700">1500</button>
+                <button type="button" onclick="setRpm(2500)" class="px-2 py-0.5 text-[10px] font-mono rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700">2500</button>
+                <button type="button" onclick="setRpm(3000)" class="px-2 py-0.5 text-[10px] font-mono rounded bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-300 font-semibold border border-cyan-500/30">3000 (Rated)</button>
+                <button type="button" onclick="setRpm(4000)" class="px-2 py-0.5 text-[10px] font-mono rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700">4000 (BLV-R)</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 2: DRIVETRAIN & GEARBOX -->
+        <section class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl p-5 space-y-4">
+          <h2 class="text-sm font-bold text-white flex items-center gap-2">
+            <span class="w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center justify-center text-xs font-mono font-bold">2</span>
+            ขนาดล้อและชุดเกียร์ทด (Wheel &amp; Drivetrain)
+          </h2>
+
+          <!-- Wheel Diameter -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <label for="input-diameter" class="text-xs font-medium text-slate-300">
+                เส้นผ่านศูนย์กลางล้อ (Wheel Diameter, <span class="font-mono text-cyan-300">D</span>)
+              </label>
+              <div class="flex items-center gap-1.5">
+                <input type="number" id="input-diameter" min="10" max="2000" step="1" value="150"
+                  oninput="recalculate()"
+                  class="w-24 text-right font-mono text-sm font-semibold px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-white focus:border-cyan-400 outline-none" />
+                <span class="text-xs font-mono text-slate-400 w-7">mm</span>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-1.5">
+              <button type="button" onclick="setDiameter(100)" class="dia-btn px-2.5 py-1 text-[11px] font-mono rounded-lg border border-slate-700 bg-slate-950 text-slate-300 transition">100 mm</button>
+              <button type="button" onclick="setDiameter(125)" class="dia-btn px-2.5 py-1 text-[11px] font-mono rounded-lg border border-slate-700 bg-slate-950 text-slate-300 transition">125 mm</button>
+              <button type="button" onclick="setDiameter(150)" class="dia-btn px-2.5 py-1 text-[11px] font-mono rounded-lg border border-slate-700 bg-slate-950 text-slate-300 transition">150 mm</button>
+              <button type="button" onclick="setDiameter(160)" class="dia-btn px-2.5 py-1 text-[11px] font-mono rounded-lg border border-slate-700 bg-slate-950 text-slate-300 transition">160 mm</button>
+              <button type="button" onclick="setDiameter(200)" class="dia-btn px-2.5 py-1 text-[11px] font-mono rounded-lg border border-slate-700 bg-slate-950 text-slate-300 transition">200 mm</button>
+            </div>
+          </div>
+
+          <!-- Gear Ratio -->
+          <div class="space-y-2 pt-3 border-t border-slate-800">
+            <div class="flex items-center justify-between">
+              <label for="input-ratio" class="text-xs font-medium text-slate-300">
+                อัตราเกียร์ทด (Gear Ratio, <span class="font-mono text-cyan-300">1 : i</span>)
+              </label>
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-mono text-slate-400">1 :</span>
+                <input type="number" id="input-ratio" min="1" max="1000" step="0.1" value="20"
+                  oninput="recalculate()"
+                  class="w-24 text-right font-mono text-sm font-semibold px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-white focus:border-cyan-400 outline-none" />
+              </div>
+            </div>
+            <div class="grid grid-cols-4 gap-1.5">
+              <button type="button" onclick="setGearRatio(5)" class="ratio-btn py-1.5 text-xs font-mono font-medium rounded-lg border border-slate-700 bg-slate-950 text-slate-300 transition">1:5</button>
+              <button type="button" onclick="setGearRatio(10)" class="ratio-btn py-1.5 text-xs font-mono font-medium rounded-lg border border-slate-700 bg-slate-950 text-slate-300 transition">1:10</button>
+              <button type="button" onclick="setGearRatio(15)" class="ratio-btn py-1.5 text-xs font-mono font-medium rounded-lg border border-slate-700 bg-slate-950 text-slate-300 transition">1:15</button>
+              <button type="button" onclick="setGearRatio(20)" class="ratio-btn py-1.5 text-xs font-mono font-medium rounded-lg border border-slate-700 bg-slate-950 text-slate-300 transition">1:20</button>
+              <button type="button" onclick="setGearRatio(30)" class="ratio-btn py-1.5 text-xs font-mono font-medium rounded-lg border border-slate-700 bg-slate-950 text-slate-300 transition">1:30</button>
+              <button type="button" onclick="setGearRatio(50)" class="ratio-btn py-1.5 text-xs font-mono font-medium rounded-lg border border-slate-700 bg-slate-950 text-slate-300 transition">1:50</button>
+              <button type="button" onclick="setGearRatio(100)" class="ratio-btn py-1.5 text-xs font-mono font-medium rounded-lg border border-slate-700 bg-slate-950 text-slate-300 transition">1:100</button>
+              <button type="button" onclick="setGearRatio(200)" class="ratio-btn py-1.5 text-xs font-mono font-medium rounded-lg border border-slate-700 bg-slate-950 text-slate-300 transition">1:200</button>
+            </div>
+          </div>
+
+          <!-- Efficiency & Safety Factor -->
+          <div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-800">
+            <div>
+              <label for="input-efficiency" class="block text-[11px] font-medium text-slate-400 mb-1">
+                ประสิทธิภาพเกียร์ (<span class="font-mono text-slate-200">&eta;</span>)
+              </label>
+              <div class="relative">
+                <input type="number" id="input-efficiency" min="10" max="100" step="1" value="85" oninput="recalculate()"
+                  class="w-full font-mono text-sm font-semibold pl-3 pr-9 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white focus:border-cyan-400 outline-none" />
+                <span class="absolute right-3 top-2.5 text-xs font-mono text-slate-500">%</span>
+              </div>
+            </div>
+            <div>
+              <label for="input-sf" class="block text-[11px] font-medium text-slate-400 mb-1">
+                ค่าความปลอดภัย (<span class="font-mono text-slate-200">SF</span>)
+              </label>
+              <div class="relative">
+                <input type="number" id="input-sf" min="1" max="5" step="0.1" value="1.2" oninput="recalculate()"
+                  class="w-full font-mono text-sm font-semibold pl-3 pr-9 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white focus:border-cyan-400 outline-none" />
+                <span class="absolute right-3 top-2.5 text-xs font-mono text-slate-500">SF</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 3: CHASSIS, TRACTION (WHEEL GRIP) & ENVIRONMENT -->
+        <section class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-bold text-white flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 flex items-center justify-center text-xs font-mono font-bold">3</span>
+              โครงสร้างรถ การยึดเกาะล้อ &amp; พื้นผิว (Traction &amp; Floor)
+            </h2>
+          </div>
+
+          <!-- Empty AMR Weight & Weight Distribution -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label for="input-amr-weight" class="block text-[11px] font-medium text-slate-300 mb-1">
+                น้ำหนักรถ AMR เปล่า (<span class="font-mono text-cyan-300">m<sub>AMR</sub></span>)
+              </label>
+              <div class="relative">
+                <input type="number" id="input-amr-weight" min="1" step="1" value="100" oninput="recalculate()"
+                  class="w-full font-mono text-sm font-semibold pl-3 pr-10 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white focus:border-cyan-400 outline-none" />
+                <span class="absolute right-3 top-2.5 text-xs font-mono text-slate-500">kg</span>
+              </div>
+            </div>
+
+            <div>
+              <label for="input-wdrive" class="block text-[11px] font-medium text-slate-300 mb-1">
+                สัดส่วนน้ำหนักลงล้อขับ (<span class="font-mono text-cyan-300">W<sub>drive</sub></span>)
+              </label>
+              <div class="relative">
+                <input type="number" id="input-wdrive" min="10" max="100" step="1" value="60" oninput="recalculate()"
+                  class="w-full font-mono text-sm font-semibold pl-3 pr-9 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white focus:border-cyan-400 outline-none" />
+                <span class="absolute right-3 top-2.5 text-xs font-mono text-slate-500">%</span>
+              </div>
+              <p class="text-[10px] text-slate-500 mt-1">อีก <span id="caster-pct-label" class="font-mono text-slate-400">40%</span> กดลงล้อประคอง (Casters)</p>
+            </div>
+          </div>
+
+          <!-- Static Friction Coefficient (Wheel Grip) -->
+          <div class="pt-3 border-t border-slate-800 space-y-2">
+            <div class="flex items-center justify-between">
+              <label for="input-mus" class="text-xs font-medium text-slate-300">
+                สัมประสิทธิ์เสียดทานสถิตหน้ายาง (<span class="font-mono text-amber-300">&mu;<sub>s</sub></span> — Wheel Grip)
+              </label>
+              <input type="number" id="input-mus" min="0.05" max="1.5" step="0.05" value="0.50" oninput="recalculate()"
+                class="w-24 text-right font-mono text-sm font-semibold px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-amber-300 focus:border-amber-400 outline-none" />
+            </div>
+
+            <!-- Static Friction Presets -->
+            <div class="grid grid-cols-2 gap-1.5">
+              <button type="button" onclick="setStaticFriction(0.50)" class="mus-btn py-1.5 px-2.5 text-[11px] rounded-lg border border-slate-700 bg-slate-950 hover:border-cyan-500/50 text-left transition">
+                <div class="font-semibold text-slate-200">PU on Dry Epoxy</div>
+                <div class="font-mono text-[10px] text-slate-400">พื้นอีพ็อกซี่แห้ง (μs = 0.50)</div>
+              </button>
+              <button type="button" onclick="setStaticFriction(0.65)" class="mus-btn py-1.5 px-2.5 text-[11px] rounded-lg border border-slate-700 bg-slate-950 hover:border-cyan-500/50 text-left transition">
+                <div class="font-semibold text-slate-200">Rubber on Concrete</div>
+                <div class="font-mono text-[10px] text-slate-400">ยางบนคอนกรีต (μs = 0.65)</div>
+              </button>
+              <button type="button" onclick="setStaticFriction(0.35)" class="mus-btn py-1.5 px-2.5 text-[11px] rounded-lg border border-slate-700 bg-slate-950 hover:border-cyan-500/50 text-left transition">
+                <div class="font-semibold text-slate-200">PU on Smooth/Dusty</div>
+                <div class="font-mono text-[10px] text-slate-400">พื้นมัน/มีฝุ่น (μs = 0.35)</div>
+              </button>
+              <button type="button" onclick="setStaticFriction(0.20)" class="mus-btn py-1.5 px-2.5 text-[11px] rounded-lg border border-slate-700 bg-slate-950 hover:border-cyan-500/50 text-left transition">
+                <div class="font-semibold text-slate-200">Wet / Oily Floor</div>
+                <div class="font-mono text-[10px] text-slate-400">พื้นเปียก/ลื่น (μs = 0.20)</div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Rolling Resistance, Acceleration & Slope -->
+          <div class="grid grid-cols-2 gap-3 pt-3 border-t border-slate-800">
+            <div>
+              <label for="input-mu1" class="block text-[11px] font-medium text-slate-400 mb-1">
+                ความฝืดล้อ AMR (<span class="font-mono text-slate-200">&mu;<sub>r1</sub></span>)
+              </label>
+              <input type="number" id="input-mu1" min="0.001" max="0.2" step="0.005" value="0.015" oninput="recalculate()"
+                class="w-full font-mono text-sm font-semibold px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white focus:border-cyan-400 outline-none" />
+            </div>
+
+            <div>
+              <label for="input-mu2" class="block text-[11px] font-medium text-slate-400 mb-1">
+                ความฝืดล้อรถพ่วง (<span class="font-mono text-slate-200">&mu;<sub>r2</sub></span>)
+              </label>
+              <input type="number" id="input-mu2" min="0.001" max="0.2" step="0.005" value="0.025" oninput="recalculate()"
+                class="w-full font-mono text-sm font-semibold px-3 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white focus:border-cyan-400 outline-none" />
+            </div>
+
+            <div>
+              <label for="input-accel" class="block text-[11px] font-medium text-slate-400 mb-1">
+                อัตราเร่งเป้าหมาย (<span class="font-mono text-slate-200">a</span>)
+              </label>
+              <div class="relative">
+                <input type="number" id="input-accel" min="0" max="5" step="0.05" value="0.30" oninput="recalculate()"
+                  class="w-full font-mono text-sm font-semibold pl-3 pr-12 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white focus:border-cyan-400 outline-none" />
+                <span class="absolute right-3 top-2.5 text-[11px] font-mono text-slate-500">m/s²</span>
+              </div>
+            </div>
+
+            <div>
+              <label for="input-slope" class="block text-[11px] font-medium text-slate-400 mb-1">
+                ความชันพื้น (<span class="font-mono text-slate-200">&theta;</span>)
+              </label>
+              <div class="relative">
+                <input type="number" id="input-slope" min="0" max="20" step="0.5" value="0.0" oninput="recalculate()"
+                  class="w-full font-mono text-sm font-semibold pl-3 pr-10 py-2 rounded-xl bg-slate-950 border border-slate-700 text-white focus:border-cyan-400 outline-none" />
+                <span class="absolute right-3 top-2.5 text-[11px] font-mono text-slate-500">deg</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- =====================================================================
+           RIGHT COLUMN (7 COLS): ALERTS, KPI CARDS, CANVAS BLUEPRINT & TABLE
+      ====================================================================== -->
+      <div class="lg:col-span-7 space-y-5">
+
+        <!-- PROMINENT WHEEL SLIP / TRACTION STATUS BANNER -->
+        <div id="traction-status-banner" class="rounded-2xl border p-4 transition-all shadow-lg">
+          <!-- Populated dynamically by JS -->
+        </div>
+
+        <!-- 4 CORE KPI TELEMETRY CARDS -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+          <!-- KPI 1: AMR Linear Speed -->
+          <div class="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-lg relative overflow-hidden">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-cyan-400">ความเร็วเชิงเส้นรถ AMR (Linear Speed)</span>
+              <span class="px-2 py-0.5 rounded bg-cyan-500/10 text-cyan-300 font-mono text-[11px] border border-cyan-500/20">
+                Wheel: <strong id="res-wheel-rpm">150.0</strong> rpm
+              </span>
+            </div>
+            <div class="flex items-baseline gap-2">
+              <span id="res-speed-ms" class="text-3xl sm:text-4xl font-mono font-bold text-white">1.18</span>
+              <span class="text-sm font-mono font-semibold text-slate-400">m/s</span>
+            </div>
+            <div class="mt-3 pt-3 border-t border-slate-800 flex items-center justify-between text-xs font-mono text-slate-400">
+              <span><strong id="res-speed-mmin" class="text-slate-200">70.7</strong> m/min</span>
+              <span class="text-slate-700">|</span>
+              <span><strong id="res-speed-kmh" class="text-slate-200">4.24</strong> km/h</span>
+              <span class="text-slate-700">|</span>
+              <span>T<sub>wheel</sub>: <strong id="res-wheel-torque" class="text-cyan-300">10.83</strong> N·m</span>
+            </div>
+          </div>
+
+          <!-- KPI 2: Drive Force vs Wheel Traction Limit -->
+          <div class="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-lg relative overflow-hidden">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-400">แรงฉุดมอเตอร์ vs ขีดจำกัดล้อเกาะพื้น</span>
+              <span id="kpi-grip-pill" class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 font-mono text-[11px] border border-emerald-500/30">
+                TRACTION SAFE
+              </span>
+            </div>
+            <div class="flex items-baseline gap-2">
+              <span id="res-fdrive" class="text-3xl sm:text-4xl font-mono font-bold text-white">240.6</span>
+              <span class="text-sm font-mono font-semibold text-slate-400">N (F<sub>drive</sub>)</span>
+            </div>
+            <div class="mt-3 pt-3 border-t border-slate-800 flex items-center justify-between text-xs font-mono text-slate-400">
+              <span>ล้อฟรีก่อนที่: <strong id="res-ftrac" class="text-amber-300">294.3</strong> N</span>
+              <span class="text-slate-700">|</span>
+              <span>N<sub>drive</sub>: <strong id="res-ndrive" class="text-slate-200">588.6</strong> N</span>
+            </div>
+          </div>
+
+          <!-- KPI 3: Independent Mode 1 — Max Carrying Load -->
+          <div class="bg-gradient-to-br from-emerald-950/90 via-slate-900 to-slate-900 rounded-2xl border border-emerald-500/40 p-5 shadow-lg relative overflow-hidden">
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-400">Mode 1: โหลดขนบนรถสูงสุด (Carrying)</span>
+              <span class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 text-[10px] font-mono border border-emerald-500/30">
+                Towing = 0 kg
+              </span>
+            </div>
+            <div class="flex items-baseline gap-2">
+              <span id="res-carry-load" class="text-3xl sm:text-4xl font-mono font-bold text-emerald-300">438.2</span>
+              <span class="text-sm font-mono font-semibold text-emerald-400/80">kg</span>
+            </div>
+            <div class="mt-3 pt-3 border-t border-emerald-500/20 flex items-center justify-between text-xs font-mono text-slate-300">
+              <span>น้ำหนักรวม (Gross): <strong id="res-gross-weight" class="text-white">538.2</strong> kg</span>
+              <span class="text-slate-600">|</span>
+              <span>ใช้แรงยึดเกาะ: <strong id="res-carry-grip-pct" class="text-emerald-300">15.2%</strong></span>
+            </div>
+          </div>
+
+          <!-- KPI 4: Independent Mode 2 — Effective Max Towing Load -->
+          <div id="kpi-tow-card" class="bg-gradient-to-br from-amber-950/80 via-slate-900 to-slate-900 rounded-2xl border border-amber-500/40 p-5 shadow-lg relative overflow-hidden transition-colors">
+            <div class="flex items-center justify-between mb-2">
+              <span id="kpi-tow-title" class="text-[11px] font-bold uppercase tracking-wider text-amber-400">Mode 2: โหลดลากจูงจริงสูงสุด (Towing)</span>
+              <span class="px-2 py-0.5 rounded bg-amber-500/15 text-amber-300 text-[10px] font-mono border border-amber-500/30">
+                Carrying = 0 kg
+              </span>
+            </div>
+            <div class="flex items-baseline gap-2">
+              <span id="res-tow-effective" class="text-3xl sm:text-4xl font-mono font-bold text-amber-300">359.3</span>
+              <span class="text-sm font-mono font-semibold text-amber-400/80">kg</span>
+            </div>
+            <div class="mt-3 pt-3 border-t border-amber-500/20 flex items-center justify-between text-[11px] font-mono text-slate-300">
+              <span>ตามแรงมอเตอร์: <strong id="res-tow-motor" class="text-cyan-300">359.3</strong> kg</span>
+              <span class="text-slate-600">|</span>
+              <span>ตามล้อเกาะพื้น: <strong id="res-tow-trac" class="text-amber-300">457.7</strong> kg</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- DUAL-MODE INTERACTIVE HTML5 CANVAS BLUEPRINT -->
+        <section class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
+          <div class="px-5 py-3 bg-slate-950/80 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-cyan-400 animate-ping"></span>
+              <h3 class="text-xs font-bold uppercase tracking-wider text-slate-200">
+                แผนภาพจำลอง CAD &amp; แรงยึดเกาะล้อ (Interactive Blueprint)
+              </h3>
+            </div>
+
+            <!-- Interactive Mode Toggle on Canvas -->
+            <div class="inline-flex p-1 rounded-xl bg-slate-900 border border-slate-800 self-start sm:self-auto">
+              <button type="button" id="canvas-mode-carry" onclick="setCanvasMode('carry')"
+                class="px-3 py-1 rounded-lg text-[11px] font-semibold transition">
+                Mode 1: ขนบนรถ (Carrying)
+              </button>
+              <button type="button" id="canvas-mode-tow" onclick="setCanvasMode('tow')"
+                class="px-3 py-1 rounded-lg text-[11px] font-semibold transition">
+                Mode 2: ลากจูง (Towing)
+              </button>
+            </div>
+          </div>
+
+          <!-- Responsive Canvas Wrapper -->
+          <div id="canvas-container" class="relative w-full h-64 sm:h-72 bg-slate-950">
+            <canvas id="amr-blueprint-canvas"></canvas>
+          </div>
+        </section>
+
+        <!-- FORCE VS TRACTION TELEMETRY COMPARISON BAR -->
+        <section class="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-lg space-y-3.5">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-200">
+              เปรียบเทียบแรงฉุดมอเตอร์ (<span class="font-mono text-cyan-400">F<sub>drive</sub></span>) กับขีดจำกัดล้อฟรี (<span class="font-mono text-amber-400">F<sub>traction,max</sub></span>)
+            </h3>
+            <span id="force-ratio-label" class="text-xs font-mono text-slate-400">
+              F<sub>drive</sub> / F<sub>traction,max</sub> = 81.8%
+            </span>
+          </div>
+
+          <!-- Dual Gauge Bars -->
+          <div class="space-y-2.5">
+            <div>
+              <div class="flex justify-between text-[11px] font-mono mb-1">
+                <span class="text-cyan-300">แรงฉุดมอเตอร์รวม 2 ล้อ (F<sub>drive</sub>, รวม SF)</span>
+                <span id="gauge-fdrive-val" class="font-bold text-cyan-300">240.6 N</span>
+              </div>
+              <div class="w-full h-3 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+                <div id="gauge-fdrive-bar" class="h-full bg-gradient-to-r from-blue-500 to-cyan-400 rounded-full transition-all duration-300" style="width: 75%"></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-[11px] font-mono mb-1">
+                <span class="text-amber-300">แรงเสียดทานยึดเกาะพื้นสูงสุดก่อนล้อฟรี (F<sub>traction,max</sub>)</span>
+                <span id="gauge-ftrac-val" class="font-bold text-amber-300">294.3 N</span>
+              </div>
+              <div class="w-full h-3 bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+                <div id="gauge-ftrac-bar" class="h-full bg-gradient-to-r from-emerald-500 to-amber-400 rounded-full transition-all duration-300" style="width: 92%"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ALL-MODELS COMPARISON TABLE (8 MODELS: BLH & BLV-R) -->
+        <section class="bg-slate-900 rounded-2xl border border-slate-800 shadow-xl overflow-hidden">
+          <div class="px-5 py-4 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div>
+              <h3 class="text-sm font-bold text-white">
+                ตารางเปรียบเทียบมอเตอร์ Oriental Motor ทั้ง 8 รุ่น (BLH &amp; BLV-R)
+              </h3>
+              <p class="text-xs text-slate-400 mt-0.5">
+                สภาวะปัจจุบัน: ล้อ <span id="tbl-dia" class="font-mono text-cyan-300">150 mm</span> | เกียร์ <span id="tbl-ratio" class="font-mono text-cyan-300">1:20</span> | รถเปล่า <span id="tbl-amr" class="font-mono text-cyan-300">100 kg</span> | <span class="font-mono text-amber-300">μ<sub>s</sub> = <span id="tbl-mus">0.50</span></span> (คลิกแถวเพื่อเลือก)
+              </p>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="bg-slate-950/90 border-b border-slate-800 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  <th class="py-3 px-3.5">รุ่นมอเตอร์ (Model)</th>
+                  <th class="py-3 px-2.5 text-right">ความเร็ว</th>
+                  <th class="py-3 px-2.5 text-right">F<sub>drive</sub> / F<sub>grip</sub></th>
+                  <th class="py-3 px-2.5 text-right text-emerald-400">ขนบนรถสูงสุด</th>
+                  <th class="py-3 px-2.5 text-right">ลาก (มอเตอร์ / เกาะพื้น)</th>
+                  <th class="py-3 px-2.5 text-right text-amber-300">ลากจูงจริง</th>
+                  <th class="py-3 px-3.5 text-center">ตัวจำกัด (Limiting Factor)</th>
+                </tr>
+              </thead>
+              <tbody id="comparison-tbody" class="divide-y divide-slate-800/80 text-xs font-mono">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- COLLAPSIBLE ENGINEERING EQUATIONS REFERENCE -->
+        <section class="bg-slate-900 rounded-2xl border border-slate-800 p-5 shadow-lg">
+          <details class="group">
+            <summary class="flex items-center justify-between cursor-pointer list-none text-xs sm:text-sm font-bold text-slate-200">
+              <span class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+                สมการวิศวกรรมและหลักการเช็กล้อฟรี (Engineering Equations &amp; Traction Physics)
+              </span>
+              <span class="text-xs font-mono text-cyan-400 group-open:rotate-180 transition-transform">▼</span>
+            </summary>
+
+            <div class="mt-4 pt-4 border-t border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-3.5 text-xs text-slate-400 leading-relaxed">
+              <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1.5">
+                <div class="font-bold text-cyan-300">1. ความเร็วและแรงฉุดมอเตอร์ (2-Wheel Drive)</div>
+                <div class="font-mono text-[11px] text-slate-200 bg-slate-900 p-2 rounded-lg border border-slate-800">
+                  Nw = Nm / i<br/>
+                  v = (π × (D / 1000) × Nw) / 60<br/>
+                  T_wheel = Tm × i × (η / 100)<br/>
+                  F_drive = (2 × T_wheel) / ((D / 2000) × SF)
+                </div>
+              </div>
+
+              <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1.5">
+                <div class="font-bold text-emerald-400">2. Mode 1: โหลดขนบนรถสูงสุด (Carrying Only)</div>
+                <div class="font-mono text-[11px] text-slate-200 bg-slate-900 p-2 rounded-lg border border-slate-800">
+                  f1 = g·sin(θ) + g·μ_r1·cos(θ) + a<br/>
+                  m_carry = (F_drive / f1) − m_AMR<br/>
+                  Grip Check: μ_s·cos(θ)·(W_drive/100)·g ≥ f1
+                </div>
+              </div>
+
+              <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1.5">
+                <div class="font-bold text-amber-400">3. Mode 2: โหลดลากจูงสูงสุด (Towing Only)</div>
+                <div class="font-mono text-[11px] text-slate-200 bg-slate-900 p-2 rounded-lg border border-slate-800">
+                  f2 = g·sin(θ) + g·μ_r2·cos(θ) + a<br/>
+                  m_tow_motor = (F_drive − m_AMR·f1) / f2<br/>
+                  F_traction_max = μ_s · m_AMR · g · cos(θ) · (W_drive/100)<br/>
+                  m_tow_trac = (F_traction_max − m_AMR·f1) / f2<br/>
+                  m_tow_effective = min(m_tow_motor, m_tow_trac)
+                </div>
+              </div>
+
+              <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 space-y-1.5">
+                <div class="font-bold text-rose-400">4. การแก้ปัญหาล้อฟรีด้วยน้ำหนักถ่วง (Ballast)</div>
+                <div class="font-mono text-[11px] text-slate-200 bg-slate-900 p-2 rounded-lg border border-slate-800">
+                  m_ballast = [F_drive / (μ_s·g·cos(θ)·(W_drive/100))] − m_AMR
+                </div>
+                <p class="text-[11px] text-slate-500">หาก F_drive &gt; F_traction_max ล้อขับเคลื่อนจะหมุนฟรีก่อนถึงแรงบิดพิกัดของมอเตอร์ ต้องเพิ่มน้ำหนักกดทับหรือเพิ่ม μ_s</p>
+              </div>
+            </div>
+          </details>
+        </section>
+
+      </div>
+    </div>
+  </main>
+
+  <script>
+    /**
+     * =========================================================================
+     * 1. ORIENTAL MOTOR DATABASE (BLH & BLV-R SERIES)
+     * =========================================================================
+     */
+    const MOTOR_DATABASE = [
+      // BLH Series (24V DC Compact Brushless Motors)
+      {
+        id: 'BLH015K',
+        series: 'BLH',
+        model: 'BLH015K',
+        powerW: 15,
+        ratedSpeed: 3000,
+        maxSpeed: 3000,
+        ratedTorque: 0.048,
+        voltage: '24V DC'
+      },
+      {
+        id: 'BLH230K',
+        series: 'BLH',
+        model: 'BLH230K',
+        powerW: 30,
+        ratedSpeed: 3000,
+        maxSpeed: 3000,
+        ratedTorque: 0.096,
+        voltage: '24V DC'
+      },
+      {
+        id: 'BLH450K',
+        series: 'BLH',
+        model: 'BLH450K',
+        powerW: 50,
+        ratedSpeed: 3000,
+        maxSpeed: 3000,
+        ratedTorque: 0.16,
+        voltage: '24V DC'
+      },
+      {
+        id: 'BLH5100K',
+        series: 'BLH',
+        model: 'BLH5100K',
+        powerW: 100,
+        ratedSpeed: 3000,
+        maxSpeed: 3000,
+        ratedTorque: 0.32,
+        voltage: '24V DC'
+      },
+      // BLV-R Series (24V/48V DC High-Efficiency AGV/AMR Brushless Motors)
+      {
+        id: 'BLVR60K',
+        series: 'BLV-R',
+        model: 'BLVR60K',
+        powerW: 60,
+        ratedSpeed: 3000,
+        maxSpeed: 4000,
+        ratedTorque: 0.191,
+        voltage: '24V / 48V DC'
+      },
+      {
+        id: 'BLVR100K',
+        series: 'BLV-R',
+        model: 'BLVR100K',
+        powerW: 100,
+        ratedSpeed: 3000,
+        maxSpeed: 4000,
+        ratedTorque: 0.318,
+        voltage: '24V / 48V DC'
+      },
+      {
+        id: 'BLVR200K',
+        series: 'BLV-R',
+        model: 'BLVR200K',
+        powerW: 200,
+        ratedSpeed: 3000,
+        maxSpeed: 4000,
+        ratedTorque: 0.637,
+        voltage: '24V / 48V DC'
+      },
+      {
+        id: 'BLVR400K',
+        series: 'BLV-R',
+        model: 'BLVR400K',
+        powerW: 400,
+        ratedSpeed: 3000,
+        maxSpeed: 4000,
+        ratedTorque: 1.27,
+        voltage: '24V / 48V DC'
+      }
+    ];
+
+    /**
+     * =========================================================================
+     * 2. APPLICATION STATE & TELEMETRY CACHE
+     * =========================================================================
+     */
+    const state = {
+      selectedSeries: 'BLV-R',
+      selectedMotorId: 'BLVR200K',
+      customTorque: null,
+      canvasMode: 'tow', // 'carry' or 'tow' (default 'tow' so user sees traction & slip physics immediately)
+      latestMetrics: null,
+      wheelAngle: 0,
+      sparks: []
+    };
+
+    function getSelectedMotor() {
+      return MOTOR_DATABASE.find(m => m.id === state.selectedMotorId) || MOTOR_DATABASE[6];
+    }
+
+    /**
+     * =========================================================================
+     * 3. MOTOR & PRESET CONTROLS
+     * =========================================================================
+     */
+    function selectSeries(seriesName) {
+      state.selectedSeries = seriesName;
+      const modelsInSeries = MOTOR_DATABASE.filter(m => m.series === seriesName);
+      if (!modelsInSeries.some(m => m.id === state.selectedMotorId)) {
+        const defaultId = seriesName === 'BLH' ? 'BLH450K' : 'BLVR200K';
+        selectMotor(defaultId);
+      } else {
+        renderMotorSelector();
+        recalculate();
+      }
+    }
+
+    function selectMotor(motorId) {
+      const motor = MOTOR_DATABASE.find(m => m.id === motorId);
+      if (!motor) return;
+      state.selectedSeries = motor.series;
+      state.selectedMotorId = motor.id;
+      state.customTorque = null;
+
+      document.getElementById('input-torque').value = motor.ratedTorque;
+      document.getElementById('input-rpm').value = motor.ratedSpeed;
+      document.getElementById('slider-rpm').value = motor.ratedSpeed;
+
+      renderMotorSelector();
+      recalculate();
+    }
+
+    function handleManualTorqueChange() {
+      const val = parseFloat(document.getElementById('input-torque').value);
+      if (!isNaN(val) && val > 0) {
+        state.customTorque = val;
+      }
+      recalculate();
+    }
+
+    function renderMotorSelector() {
+      const tabBLH = document.getElementById('tab-BLH');
+      const tabBLVR = document.getElementById('tab-BLV-R');
+
+      if (state.selectedSeries === 'BLH') {
+        tabBLH.className = 'py-2 px-3 rounded-lg text-xs font-semibold transition text-center bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm';
+        tabBLVR.className = 'py-2 px-3 rounded-lg text-xs font-semibold transition text-center text-slate-400 hover:text-slate-200 border border-transparent';
+      } else {
+        tabBLVR.className = 'py-2 px-3 rounded-lg text-xs font-semibold transition text-center bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm';
+        tabBLH.className = 'py-2 px-3 rounded-lg text-xs font-semibold transition text-center text-slate-400 hover:text-slate-200 border border-transparent';
+      }
+
+      const grid = document.getElementById('motor-cards-grid');
+      const models = MOTOR_DATABASE.filter(m => m.series === state.selectedSeries);
+
+      grid.innerHTML = models.map(m => {
+        const isSelected = m.id === state.selectedMotorId;
+        const cardStyle = isSelected
+          ? 'border-cyan-400 bg-cyan-950/40 ring-2 ring-cyan-500/20'
+          : 'border-slate-800 bg-slate-950 hover:border-slate-600';
+
+        return `
+          <button type="button" onclick="selectMotor('${m.id}')"
+            class="p-3 rounded-xl border text-left transition flex flex-col justify-between ${cardStyle}">
+            <div class="flex items-center justify-between w-full mb-1">
+              <span class="text-sm font-mono font-bold ${isSelected ? 'text-cyan-300' : 'text-white'}">${m.powerW}W</span>
+              <span class="text-[10px] font-mono px-1.5 py-0.5 rounded ${isSelected ? 'bg-cyan-500 text-slate-950 font-bold' : 'bg-slate-800 text-slate-300'}">${m.model}</span>
+            </div>
+            <div class="text-[11px] font-mono text-slate-300">
+              Torque: <strong class="text-white">${m.ratedTorque}</strong> N·m
+            </div>
+            <div class="text-[10px] font-mono text-slate-500 mt-0.5">
+              Rated: ${m.ratedSpeed} rpm | ${m.voltage}
+            </div>
+          </button>
+        `;
+      }).join('');
+
+      const activeMotor = getSelectedMotor();
+      document.getElementById('selected-motor-badge').textContent = `${activeMotor.model} (${activeMotor.powerW}W)`;
+    }
+
+    function setDiameter(val) {
+      document.getElementById('input-diameter').value = val;
+      recalculate();
+    }
+
+    function setRpm(val) {
+      document.getElementById('input-rpm').value = val;
+      document.getElementById('slider-rpm').value = val;
+      recalculate();
+    }
+
+    function syncRpmFromInput() {
+      const val = parseFloat(document.getElementById('input-rpm').value);
+      if (!isNaN(val)) {
+        document.getElementById('slider-rpm').value = Math.min(4000, Math.max(100, val));
+      }
+      recalculate();
+    }
+
+    function syncRpmFromSlider() {
+      const val = document.getElementById('slider-rpm').value;
+      document.getElementById('input-rpm').value = val;
+      recalculate();
+    }
+
+    function setGearRatio(ratio) {
+      document.getElementById('input-ratio').value = ratio;
+      // Sensible efficiency default: 85% for 1-2 stage (<=20), 80% for 3-stage (>20)
+      document.getElementById('input-efficiency').value = ratio <= 20 ? 85 : 80;
+      recalculate();
+    }
+
+    function setStaticFriction(mus) {
+      document.getElementById('input-mus').value = mus.toFixed(2);
+      recalculate();
+    }
+
+    function applySuggestedBallast(ballastKg) {
+      const currentAmr = parseFloat(document.getElementById('input-amr-weight').value) || 100;
+      const newWeight = Math.ceil(currentAmr + ballastKg);
+      document.getElementById('input-amr-weight').value = newWeight;
+      recalculate();
+      showToast(`อัปเดตน้ำหนักรถ AMR เป็น ${newWeight} kg เพื่อป้องกันล้อฟรีเรียบร้อยแล้ว`);
+    }
+
+    function setCanvasMode(mode) {
+      state.canvasMode = mode;
+      const btnCarry = document.getElementById('canvas-mode-carry');
+      const btnTow = document.getElementById('canvas-mode-tow');
+
+      if (mode === 'carry') {
+        btnCarry.className = 'px-3 py-1 rounded-lg text-[11px] font-semibold transition bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+        btnTow.className = 'px-3 py-1 rounded-lg text-[11px] font-semibold transition text-slate-400 hover:text-slate-200 border border-transparent';
+      } else {
+        btnTow.className = 'px-3 py-1 rounded-lg text-[11px] font-semibold transition bg-amber-500/20 text-amber-300 border border-amber-500/40';
+        btnCarry.className = 'px-3 py-1 rounded-lg text-[11px] font-semibold transition text-slate-400 hover:text-slate-200 border border-transparent';
+      }
+    }
+
+    function updatePresetHighlights(diameter, ratio, mus) {
+      document.querySelectorAll('.dia-btn').forEach(btn => {
+        const val = parseFloat(btn.textContent);
+        btn.className = val === diameter
+          ? 'dia-btn px-2.5 py-1 text-[11px] font-mono rounded-lg border border-cyan-400 bg-cyan-500/20 text-cyan-300 font-semibold transition'
+          : 'dia-btn px-2.5 py-1 text-[11px] font-mono rounded-lg border border-slate-700 bg-slate-950 hover:border-slate-500 text-slate-300 transition';
+      });
+
+      document.querySelectorAll('.ratio-btn').forEach(btn => {
+        const val = parseFloat(btn.textContent.replace('1:', ''));
+        btn.className = val === ratio
+          ? 'ratio-btn py-1.5 text-xs font-mono font-semibold rounded-lg border border-cyan-400 bg-cyan-500/20 text-cyan-300 transition'
+          : 'ratio-btn py-1.5 text-xs font-mono font-medium rounded-lg border border-slate-700 bg-slate-950 hover:border-slate-500 text-slate-300 transition';
+      });
+
+      document.querySelectorAll('.mus-btn').forEach(btn => {
+        const match = btn.textContent.match(/μs\s*=\s*([0-9.]+)/);
+        const val = match ? parseFloat(match[1]) : -1;
+        btn.className = Math.abs(val - mus) < 0.001
+          ? 'mus-btn py-1.5 px-2.5 text-[11px] rounded-lg border border-amber-400 bg-amber-500/15 text-left transition'
+          : 'mus-btn py-1.5 px-2.5 text-[11px] rounded-lg border border-slate-700 bg-slate-950 hover:border-slate-500 text-left transition';
+      });
+    }
+
+    /**
+     * =========================================================================
+     * 4. EXACT ENGINEERING & TRACTION PHYSICS ENGINE
+     * =========================================================================
+     */
+    function computeEngineeringMetrics(params) {
+      const {
+        torqueNm, diameterMm, rpm, ratio, efficiencyPct, sf,
+        amrWeight, wDrivePct, mus, mu1, mu2, accel, slopeDeg
+      } = params;
+
+      const g = 9.81;
+      const thetaRad = (slopeDeg * Math.PI) / 180.0;
+      const cosTheta = Math.cos(thetaRad);
+      const sinTheta = Math.sin(thetaRad);
+      const wDriveFrac = wDrivePct / 100.0;
+
+      // 1. Linear Speed & Drive Force
+      const Nw = rpm / ratio;
+      const vMs = (Math.PI * (diameterMm / 1000.0) * Nw) / 60.0;
+      const vMmin = vMs * 60.0;
+      const vKmh = vMs * 3.6;
+
+      const T_wheel = torqueNm * ratio * (efficiencyPct / 100.0);
+      const radiusMeters = diameterMm / 2000.0;
+      const F_drive = (2.0 * T_wheel) / (radiusMeters * sf);
+
+      // Specific resistance factors (N/kg)
+      const f1 = g * sinTheta + g * mu1 * cosTheta + accel;
+      const f2 = g * sinTheta + g * mu2 * cosTheta + accel;
+
+      // 2. Independent Mode 1: Max Carrying Load (Towing = 0 kg)
+      const m_carry_motor = f1 > 0 ? Math.max(0, (F_drive / f1) - amrWeight) : 0;
+      const f_grip_specific = mus * cosTheta * wDriveFrac * g;
+      const carryGripSafe = f_grip_specific >= f1;
+      const m_carry_effective = carryGripSafe ? m_carry_motor : 0;
+      const carryTractionUtilPct = f_grip_specific > 0 ? (f1 / f_grip_specific) * 100.0 : 999.9;
+      const N_drive_carry = (amrWeight + m_carry_effective) * g * cosTheta * wDriveFrac;
+
+      // 3. Independent Mode 2: Max Towing Load (Carrying = 0 kg)
+      const F_AMR = amrWeight * f1;
+
+      // Limit A: Motor Torque Limit
+      const F_net_motor = Math.max(0, F_drive - F_AMR);
+      const m_tow_motor = f2 > 0 ? F_net_motor / f2 : 0;
+
+      // Limit B: Wheel Traction / Slip Limit
+      const N_drive_tow = amrWeight * g * cosTheta * wDriveFrac;
+      const F_traction_max = mus * N_drive_tow;
+      const F_net_trac = Math.max(0, F_traction_max - F_AMR);
+      const m_tow_trac = f2 > 0 ? F_net_trac / f2 : 0;
+
+      // Effective Max Towing Load
+      const m_tow_effective = Math.min(m_tow_motor, m_tow_trac);
+
+      // Wheel Slip Check & Ballast Countermeasure
+      const isWheelSlip = (F_drive > F_traction_max) || (m_tow_motor > m_tow_trac);
+      const denomBallast = mus * g * cosTheta * wDriveFrac;
+      const m_ballast = denomBallast > 0 ? Math.max(0, (F_drive / denomBallast) - amrWeight) : 0;
+      const gripMarginPct = F_traction_max > 0 ? ((F_traction_max - F_drive) / F_traction_max) * 100.0 : -100;
+      const driveToGripRatioPct = F_traction_max > 0 ? (F_drive / F_traction_max) * 100.0 : 999;
+
+      return {
+        Nw,
+        vMs,
+        vMmin,
+        vKmh,
+        T_wheel,
+        F_drive,
+        f1,
+        f2,
+        F_AMR,
+        m_carry_motor,
+        carryGripSafe,
+        m_carry_effective,
+        carryTractionUtilPct,
+        N_drive_carry,
+        N_drive_tow,
+        F_traction_max,
+        F_net_motor,
+        F_net_trac,
+        m_tow_motor,
+        m_tow_trac,
+        m_tow_effective,
+        isWheelSlip,
+        m_ballast,
+        gripMarginPct,
+        driveToGripRatioPct
+      };
+    }
+
+    /**
+     * =========================================================================
+     * 5. MAIN RECALCULATION & DOM UPDATER
+     * =========================================================================
+     */
+    function recalculate() {
+      const motor = getSelectedMotor();
+
+      const params = {
+        torqueNm: Math.max(0.001, parseFloat(document.getElementById('input-torque').value) || motor.ratedTorque),
+        diameterMm: Math.max(10, parseFloat(document.getElementById('input-diameter').value) || 150),
+        rpm: Math.max(1, parseFloat(document.getElementById('input-rpm').value) || 3000),
+        ratio: Math.max(1, parseFloat(document.getElementById('input-ratio').value) || 20),
+        efficiencyPct: Math.min(100, Math.max(10, parseFloat(document.getElementById('input-efficiency').value) || 85)),
+        sf: Math.max(0.1, parseFloat(document.getElementById('input-sf').value) || 1.2),
+        amrWeight: Math.max(1, parseFloat(document.getElementById('input-amr-weight').value) || 100),
+        wDrivePct: Math.min(100, Math.max(10, parseFloat(document.getElementById('input-wdrive').value) || 60)),
+        mus: Math.max(0.01, parseFloat(document.getElementById('input-mus').value) || 0.50),
+        mu1: Math.max(0.001, parseFloat(document.getElementById('input-mu1').value) || 0.015),
+        mu2: Math.max(0.001, parseFloat(document.getElementById('input-mu2').value) || 0.025),
+        accel: Math.max(0, parseFloat(document.getElementById('input-accel').value) || 0),
+        slopeDeg: Math.max(0, parseFloat(document.getElementById('input-slope').value) || 0)
+      };
+
+      document.getElementById('caster-pct-label').textContent = `${(100 - params.wDrivePct).toFixed(0)}%`;
+      updatePresetHighlights(params.diameterMm, params.ratio, params.mus);
+
+      const m = computeEngineeringMetrics(params);
+      state.latestMetrics = { motor, params, m };
+
+      // Update KPI 1: Speed
+      document.getElementById('res-wheel-rpm').textContent = m.Nw.toFixed(1);
+      document.getElementById('res-speed-ms').textContent = m.vMs.toFixed(2);
+      document.getElementById('res-speed-mmin').textContent = m.vMmin.toFixed(1);
+      document.getElementById('res-speed-kmh').textContent = m.vKmh.toFixed(2);
+      document.getElementById('res-wheel-torque').textContent = m.T_wheel.toFixed(2);
+
+      // Update KPI 2: Force & Grip
+      document.getElementById('res-fdrive').textContent = m.F_drive.toFixed(1);
+      document.getElementById('res-ftrac').textContent = m.F_traction_max.toFixed(1);
+      document.getElementById('res-ndrive').textContent = m.N_drive_tow.toFixed(1);
+
+      const kpiGripPill = document.getElementById('kpi-grip-pill');
+      if (m.isWheelSlip) {
+        kpiGripPill.textContent = '⚠️ WHEEL SLIP';
+        kpiGripPill.className = 'px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-mono text-[11px] font-bold border border-rose-500/40 animate-pulse';
+      } else {
+        kpiGripPill.textContent = '✅ TRACTION SAFE';
+        kpiGripPill.className = 'px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-300 font-mono text-[11px] font-semibold border border-emerald-500/30';
+      }
+
+      // Update KPI 3: Mode 1 Carrying
+      document.getElementById('res-carry-load').textContent = m.m_carry_effective.toFixed(1);
+      document.getElementById('res-gross-weight').textContent = (params.amrWeight + m.m_carry_effective).toFixed(1);
+      document.getElementById('res-carry-grip-pct').textContent = `${m.carryTractionUtilPct.toFixed(1)}%`;
+
+      // Update KPI 4: Mode 2 Towing
+      document.getElementById('res-tow-effective').textContent = m.m_tow_effective.toFixed(1);
+      document.getElementById('res-tow-motor').textContent = `${m.m_tow_motor.toFixed(1)}`;
+      document.getElementById('res-tow-trac').textContent = `${m.m_tow_trac.toFixed(1)}`;
+
+      const towCard = document.getElementById('kpi-tow-card');
+      const towTitle = document.getElementById('kpi-tow-title');
+      if (m.isWheelSlip) {
+        towCard.className = 'bg-gradient-to-br from-rose-950/90 via-slate-900 to-slate-900 rounded-2xl border border-rose-500/50 p-5 shadow-lg relative overflow-hidden transition-colors';
+        towTitle.className = 'text-[11px] font-bold uppercase tracking-wider text-rose-400';
+      } else {
+        towCard.className = 'bg-gradient-to-br from-amber-950/80 via-slate-900 to-slate-900 rounded-2xl border border-amber-500/40 p-5 shadow-lg relative overflow-hidden transition-colors';
+        towTitle.className = 'text-[11px] font-bold uppercase tracking-wider text-amber-400';
+      }
+
+      // Update Alert Banner
+      updateTractionStatusBanner(motor, params, m);
+
+      // Update Force Gauge Bars
+      updateForceGauges(m);
+
+      // Update Comparison Table
+      renderComparisonTable(params);
+    }
+
+    /**
+     * Prominent Wheel Slip Alert vs Traction Safe Banner
+     */
+    function updateTractionStatusBanner(motor, params, m) {
+      const banner = document.getElementById('traction-status-banner');
+
+      if (!m.carryGripSafe) {
+        // Extreme slope or ultra-low friction where even carrying mode slips
+        banner.className = 'rounded-2xl border border-rose-500/60 bg-rose-950/70 p-4 shadow-xl space-y-2';
+        banner.innerHTML = `
+          <div class="flex items-start gap-3">
+            <span class="px-2.5 py-1 rounded-lg bg-rose-500 text-white font-mono text-xs font-bold shrink-0">⚠️ CRITICAL SLIP</span>
+            <div class="text-xs text-rose-100 leading-relaxed">
+              <div class="font-bold text-sm text-white mb-0.5">ล้อหมุนฟรีแม้ไม่ได้ลากพ่วง (ความชัน θ = ${params.slopeDeg}° หรือความฝืดพื้น μs = ${params.mus} ต่ำเกินไป)</div>
+              <p>แรงยึดเกาะต่อหน่วยน้ำหนัก (<span class="font-mono">${(params.mus * Math.cos(params.slopeDeg * Math.PI / 180) * (params.wDrivePct / 100) * 9.81).toFixed(2)} N/kg</span>) น้อยกว่าแรงต้านความชันและความเร่ง (<span class="font-mono">f₁ = ${m.f1.toFixed(2)} N/kg</span>) ทำให้ล้อไถลทั้งในโหมดขนและลากจูง</p>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (m.isWheelSlip) {
+        banner.className = 'rounded-2xl border border-rose-500/60 bg-gradient-to-r from-rose-950/90 via-amber-950/60 to-slate-900 p-4 shadow-xl';
+        banner.innerHTML = `
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+            <div class="flex items-start gap-3">
+              <div class="w-9 h-9 rounded-xl bg-rose-500/20 border border-rose-500/50 flex items-center justify-center text-rose-400 shrink-0 mt-0.5">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div class="text-xs leading-relaxed space-y-1">
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="font-bold text-sm text-rose-300">⚠️ WHEEL SLIP WARNING ALERT — ตรวจพบความเสี่ยงล้อฟรีในโหมดลากจูง!</span>
+                </div>
+                <p class="text-slate-200">
+                  แรงฉุดจากมอเตอร์ (<strong class="font-mono text-cyan-300">${m.F_drive.toFixed(1)} N</strong>) สูงกว่าแรงเสียดทานยึดเกาะพื้นสูงสุดของล้อ (<strong class="font-mono text-amber-300">${m.F_traction_max.toFixed(1)} N</strong>) ทำให้ล้อขับเคลื่อนหมุนฟรีก่อนถึงกำลังเต็มพิกัด ส่งผลให้น้ำหนักลากจูงจริงถูกจำกัดไว้ที่ <strong class="font-mono text-rose-300 underline">${m.m_tow_effective.toFixed(1)} kg</strong> (แทนที่จะได้ ${m.m_tow_motor.toFixed(1)} kg ตามกำลังมอเตอร์)
+                </p>
+                <div class="pt-1 flex flex-wrap items-center gap-2 text-[11px] text-amber-200">
+                  <span class="px-2 py-0.5 rounded bg-amber-500/20 border border-amber-500/40 font-mono">
+                    💡 แนวทางแก้ไข: เพิ่มน้ำหนักถ่วงบนรถ (Ballast) อย่างน้อย <strong>+${m.m_ballast.toFixed(1)} kg</strong> (รวมเป็น ${(params.amrWeight + m.m_ballast).toFixed(1)} kg)
+                  </span>
+                </div>
+              </div>
+            </div>
+            <button type="button" onclick="applySuggestedBallast(${m.m_ballast.toFixed(2)})"
+              class="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shrink-0 shadow-md transition self-start md:self-center">
+              + เพิ่มน้ำหนักถ่วง ${Math.ceil(m.m_ballast)} kg
+            </button>
+          </div>
+        `;
+      } else {
+        banner.className = 'rounded-2xl border border-emerald-500/40 bg-emerald-950/30 p-3.5 shadow-md';
+        banner.innerHTML = `
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div class="flex items-center gap-3">
+              <span class="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-xs font-bold shrink-0">
+                ✅ TRACTION SAFE
+              </span>
+              <p class="text-xs text-slate-200">
+                หน้ายางยึดเกาะพื้นได้ดีเยี่ยม (<span class="font-mono text-cyan-300">F<sub>drive</sub> = ${m.F_drive.toFixed(1)} N</span> ≤ <span class="font-mono text-emerald-300">F<sub>traction,max</sub> = ${m.F_traction_max.toFixed(1)} N</span>) ไม่เกิดอาการล้อฟรีทั้งโหมดขนบนรถและลากจูง
+              </p>
+            </div>
+            <span class="text-xs font-mono font-semibold text-emerald-300 bg-slate-950 px-3 py-1 rounded-lg border border-emerald-500/30 shrink-0">
+              Grip Margin: +${m.gripMarginPct.toFixed(1)}%
+            </span>
+          </div>
+        `;
+      }
+    }
+
+    function updateForceGauges(m) {
+      const maxScale = Math.max(m.F_drive, m.F_traction_max, 1) * 1.12;
+      const pctDrive = Math.min(100, (m.F_drive / maxScale) * 100);
+      const pctTrac = Math.min(100, (m.F_traction_max / maxScale) * 100);
+
+      document.getElementById('gauge-fdrive-val').textContent = `${m.F_drive.toFixed(1)} N`;
+      document.getElementById('gauge-ftrac-val').textContent = `${m.F_traction_max.toFixed(1)} N`;
+
+      document.getElementById('gauge-fdrive-bar').style.width = `${pctDrive.toFixed(1)}%`;
+      document.getElementById('gauge-ftrac-bar').style.width = `${pctTrac.toFixed(1)}%`;
+
+      const ratioLabel = document.getElementById('force-ratio-label');
+      ratioLabel.textContent = `F_drive / F_traction,max = ${m.driveToGripRatioPct.toFixed(1)}%`;
+      ratioLabel.className = m.isWheelSlip
+        ? 'text-xs font-mono font-bold text-rose-400'
+        : 'text-xs font-mono font-semibold text-emerald-400';
+    }
+
+    /**
+     * =========================================================================
+     * 6. ALL-MODELS COMPARISON TABLE (8 MODELS)
+     * =========================================================================
+     */
+    function renderComparisonTable(baseParams) {
+      document.getElementById('tbl-dia').textContent = `${baseParams.diameterMm} mm`;
+      document.getElementById('tbl-ratio').textContent = `1:${baseParams.ratio}`;
+      document.getElementById('tbl-amr').textContent = `${baseParams.amrWeight} kg`;
+      document.getElementById('tbl-mus').textContent = `${baseParams.mus.toFixed(2)}`;
+
+      const tbody = document.getElementById('comparison-tbody');
+      tbody.innerHTML = MOTOR_DATABASE.map(motor => {
+        const isCurrent = motor.id === state.selectedMotorId;
+        const torqueToUse = (isCurrent && state.customTorque !== null) ? state.customTorque : motor.ratedTorque;
+        const rpmToUse = isCurrent ? baseParams.rpm : motor.ratedSpeed;
+
+        const rowParams = {
+          ...baseParams,
+          torqueNm: torqueToUse,
+          rpm: rpmToUse
+        };
+        const perf = computeEngineeringMetrics(rowParams);
+
+        const rowBg = isCurrent
+          ? 'bg-cyan-950/50 text-white'
+          : 'hover:bg-slate-800/60 text-slate-300';
+
+        const limitBadge = perf.isWheelSlip
+          ? `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/40 text-[10px] font-sans font-semibold">⚠️ Wheel Slip Limited</span>`
+          : `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 text-[10px] font-sans font-semibold">Motor Torque Limited</span>`;
+
+        return `
+          <tr onclick="selectMotor('${motor.id}')" class="${rowBg} cursor-pointer transition">
+            <td class="py-3 px-3.5 font-sans">
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full ${isCurrent ? 'bg-cyan-400 shadow-[0_0_8px_#22d3ee]' : 'bg-slate-600'}"></span>
+                <div>
+                  <div class="font-bold text-white flex items-center gap-1.5">
+                    <span>${motor.model}</span>
+                    <span class="text-[10px] font-mono px-1.5 py-0.2 rounded bg-slate-800 text-cyan-300">${motor.powerW}W</span>
+                  </div>
+                  <div class="text-[10px] font-mono text-slate-400">${motor.series} | ${torqueToUse} N·m</div>
+                </div>
+              </div>
+            </td>
+            <td class="py-3 px-2.5 text-right">
+              <div class="font-bold text-white">${perf.vMs.toFixed(2)} m/s</div>
+              <div class="text-[10px] text-slate-400">${perf.Nw.toFixed(0)} rpm</div>
+            </td>
+            <td class="py-3 px-2.5 text-right">
+              <div class="text-cyan-300 font-semibold">${perf.F_drive.toFixed(0)} N</div>
+              <div class="text-[10px] text-amber-300/80">Grip: ${perf.F_traction_max.toFixed(0)} N</div>
+            </td>
+            <td class="py-3 px-2.5 text-right font-bold text-emerald-400">
+              ${perf.m_carry_effective.toFixed(1)} kg
+            </td>
+            <td class="py-3 px-2.5 text-right text-[11px]">
+              <span class="text-cyan-300">${perf.m_tow_motor.toFixed(0)}</span>
+              <span class="text-slate-600"> / </span>
+              <span class="text-amber-300">${perf.m_tow_trac.toFixed(0)} kg</span>
+            </td>
+            <td class="py-3 px-2.5 text-right font-bold ${perf.isWheelSlip ? 'text-rose-300' : 'text-amber-300'}">
+              ${perf.m_tow_effective.toFixed(1)} kg
+            </td>
+            <td class="py-3 px-3.5 text-center">
+              ${limitBadge}
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    /**
+     * =========================================================================
+     * 7. INTERACTIVE DUAL-MODE HTML5 CANVAS BLUEPRINT & ANIMATION
+     * =========================================================================
+     */
+    const canvas = document.getElementById('amr-blueprint-canvas');
+    const ctx = canvas.getContext('2d');
+    let canvasWidth = 700;
+    let canvasHeight = 270;
+    let lastTimestamp = 0;
+
+    function resizeCanvas() {
+      const container = document.getElementById('canvas-container');
+      if (!container) return;
+      const rect = container.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvasWidth = rect.width;
+      canvasHeight = rect.height;
+      canvas.width = Math.round(canvasWidth * dpr);
+      canvas.height = Math.round(canvasHeight * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function drawArrow(x1, y1, x2, y2, color, lineWidth = 2.5) {
+      const headLen = 9;
+      const angle = Math.atan2(y2 - y1, x2 - x1);
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = lineWidth;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
+      ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawRoundRect(x, y, w, h, r, fill, stroke, lineWidth = 1.5, dash = []) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.roundRect(x, y, w, h, r);
+      if (fill) {
+        ctx.fillStyle = fill;
+        ctx.fill();
+      }
+      if (stroke) {
+        ctx.setLineDash(dash);
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = lineWidth;
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function renderBlueprintFrame(timestamp) {
+      if (!lastTimestamp) lastTimestamp = timestamp;
+      const dt = Math.min(0.05, (timestamp - lastTimestamp) / 1000);
+      lastTimestamp = timestamp;
+
+      const data = state.latestMetrics;
+      if (!data) {
+        requestAnimationFrame(renderBlueprintFrame);
+        return;
+      }
+
+      const { motor, params, m } = data;
+      const isCarryMode = state.canvasMode === 'carry';
+      const slipActive = isCarryMode ? !m.carryGripSafe : m.isWheelSlip;
+
+      // Advance wheel angle proportional to wheel RPM (faster if slipping!)
+      const visualRpm = slipActive ? Math.max(m.Nw * 2.2, 180) : m.Nw;
+      const omega = (visualRpm * 2 * Math.PI) / 60;
+      state.wheelAngle = (state.wheelAngle + omega * dt) % (Math.PI * 2);
+
+      // Clear & Draw CAD Blueprint Grid
+      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+      ctx.fillStyle = '#070b14';
+      ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+
+      ctx.strokeStyle = 'rgba(6, 182, 212, 0.08)';
+      ctx.lineWidth = 1;
+      const gridStep = 22;
+      for (let gx = 0; gx < canvasWidth; gx += gridStep) {
+        ctx.beginPath();
+        ctx.moveTo(gx, 0);
+        ctx.lineTo(gx, canvasHeight);
+        ctx.stroke();
+      }
+      for (let gy = 0; gy < canvasHeight; gy += gridStep) {
+        ctx.beginPath();
+        ctx.moveTo(0, gy);
+        ctx.lineTo(canvasWidth, gy);
+        ctx.stroke();
+      }
+
+      // Scale coordinate space cleanly to fit mobile & desktop widths
+      const virtualW = 760;
+      const virtualH = 270;
+      const scale = Math.min(canvasWidth / virtualW, canvasHeight / virtualH);
+      const offsetX = (canvasWidth - virtualW * scale) / 2;
+      const offsetY = (canvasHeight - virtualH * scale) / 2;
+
+      ctx.save();
+      ctx.translate(offsetX, offsetY);
+      ctx.scale(scale, scale);
+
+      // Floor inclination angle (exaggerated slightly visually so user sees slope clearly)
+      const groundY = 222;
+      const slopeVisRad = -(Math.min(15, params.slopeDeg) * 1.4 * Math.PI) / 180;
+
+      ctx.save();
+      ctx.translate(380, groundY);
+      ctx.rotate(slopeVisRad);
+      ctx.translate(-380, -groundY);
+
+      // Ground Line
+      ctx.strokeStyle = '#475569';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(20, groundY);
+      ctx.lineTo(740, groundY);
+      ctx.stroke();
+
+      // Ground Hatch Marks
+      ctx.strokeStyle = '#1e293b';
+      ctx.lineWidth = 1.5;
+      for (let hx = 30; hx < 735; hx += 18) {
+        ctx.beginPath();
+        ctx.moveTo(hx, groundY);
+        ctx.lineTo(hx - 8, groundY + 9);
+        ctx.stroke();
+      }
+
+      // Position AMR unit (shifted right if Tow Mode is active)
+      const amrX = isCarryMode ? 265 : 375;
+      const amrW = 240;
+      const wheelRadius = 18 + ((Math.min(240, Math.max(80, params.diameterMm)) - 80) / 160) * 9;
+      const wheelCenterX = amrX + amrW / 2;
+      const wheelCenterY = groundY - wheelRadius;
+      const chassisBottomY = wheelCenterY - 8;
+      const chassisH = 44;
+      const chassisTopY = chassisBottomY - chassisH;
+
+      // IF MODE 2 (TOWING): Draw Towed Cart + Tow Bar on the Left
+      if (!isCarryMode) {
+        const cartX = 55;
+        const cartW = 215;
+        const cartChassisY = groundY - 46;
+
+        // Towed Payload Box
+        drawRoundRect(cartX + 14, cartChassisY - 68, cartW - 28, 62, 8, 'rgba(245, 158, 11, 0.16)', '#f59e0b', 1.6, [5, 3]);
+        ctx.fillStyle = '#fde68a';
+        ctx.font = '600 11px "Noto Sans Thai", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('โหลดลากจูงจริงสูงสุด (Effective Towing)', cartX + cartW / 2, cartChassisY - 42);
+
+        ctx.fillStyle = slipActive ? '#fda4af' : '#fbbf24';
+        ctx.font = '700 16px "JetBrains Mono", monospace';
+        ctx.fillText(`${m.m_tow_effective.toFixed(1)} kg`, cartX + cartW / 2, cartChassisY - 20);
+
+        // Cart Chassis
+        drawRoundRect(cartX, cartChassisY, cartW, 20, 5, '#1e293b', '#64748b', 1.5);
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '500 10px "JetBrains Mono", monospace';
+        ctx.fillText(`TOWED CART (μr2 = ${params.mu2.toFixed(3)})`, cartX + cartW / 2, cartChassisY + 13);
+
+        // Cart Casters
+        [cartX + 34, cartX + cartW - 34].forEach(cx => {
+          ctx.beginPath();
+          ctx.arc(cx, groundY - 13, 13, 0, Math.PI * 2);
+          ctx.fillStyle = '#0f172a';
+          ctx.fill();
+          ctx.strokeStyle = '#64748b';
+          ctx.lineWidth = 2;
+          ctx.stroke();
+        });
+
+        // Tow Hitch Bar
+        const hitchStartX = cartX + cartW;
+        const hitchEndX = amrX;
+        const hitchY = chassisTopY + chassisH / 2 + 4;
+        ctx.strokeStyle = slipActive ? '#f43f5e' : '#fbbf24';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(hitchStartX, cartChassisY + 10);
+        ctx.lineTo(hitchEndX, hitchY);
+        ctx.stroke();
+
+        ctx.fillStyle = slipActive ? '#fda4af' : '#fbbf24';
+        ctx.font = '600 10px "JetBrains Mono", monospace';
+        ctx.fillText(`F_tow = ${Math.min(m.F_net_motor, m.F_net_trac).toFixed(0)} N`, (hitchStartX + hitchEndX) / 2, hitchY - 12);
+      }
+
+      // IF MODE 1 (CARRYING): Draw Payload Directly on Top of AMR
+      if (isCarryMode) {
+        drawRoundRect(amrX + 18, chassisTopY - 68, amrW - 36, 62, 8, 'rgba(16, 185, 129, 0.16)', '#10b981', 1.6);
+        ctx.fillStyle = '#a7f3d0';
+        ctx.font = '600 11px "Noto Sans Thai", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('โหลดขนบนรถสูงสุด (Max Carrying Load)', amrX + amrW / 2, chassisTopY - 42);
+
+        ctx.fillStyle = '#34d399';
+        ctx.font = '700 16px "JetBrains Mono", monospace';
+        ctx.fillText(`${m.m_carry_effective.toFixed(1)} kg`, amrX + amrW / 2, chassisTopY - 20);
+      }
+
+      // AMR Main Chassis Body
+      drawRoundRect(amrX, chassisTopY, amrW, chassisH, 10, '#1e293b', '#38bdf8', 2);
+
+      // Front LIDAR Sensor + Beam
+      drawRoundRect(amrX + amrW - 8, chassisTopY + 11, 18, 16, 4, '#06b6d4', null);
+      ctx.fillStyle = 'rgba(6, 182, 212, 0.14)';
+      ctx.beginPath();
+      ctx.moveTo(amrX + amrW + 10, chassisTopY + 19);
+      ctx.lineTo(amrX + amrW + 48, chassisTopY + 6);
+      ctx.lineTo(amrX + amrW + 48, chassisTopY + 32);
+      ctx.closePath();
+      ctx.fill();
+
+      // AMR Chassis Labels
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = '700 11px "Noto Sans Thai", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`AMR (${motor.model} × 2 | 1:${params.ratio})`, amrX + amrW / 2, chassisTopY + 18);
+
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '500 10px "JetBrains Mono", monospace';
+      ctx.fillText(`m_AMR=${params.amrWeight}kg | W_drive=${params.wDrivePct}% | μs=${params.mus.toFixed(2)}`, amrX + amrW / 2, chassisTopY + 34);
+
+      // Passive Caster Wheels (Front & Rear)
+      [amrX + 30, amrX + amrW - 30].forEach(cx => {
+        ctx.beginPath();
+        ctx.arc(cx, groundY - 11, 11, 0, Math.PI * 2);
+        ctx.fillStyle = '#0f172a';
+        ctx.fill();
+        ctx.strokeStyle = '#64748b';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      });
+
+      // Center Drive Wheel (Spinning)
+      ctx.save();
+      ctx.translate(wheelCenterX, wheelCenterY);
+      ctx.beginPath();
+      ctx.arc(0, 0, wheelRadius, 0, Math.PI * 2);
+      ctx.fillStyle = '#0f172a';
+      ctx.fill();
+      ctx.strokeStyle = slipActive ? '#f43f5e' : '#38bdf8';
+      ctx.lineWidth = 3.5;
+      ctx.stroke();
+
+      // Rotating Spokes
+      ctx.rotate(state.wheelAngle);
+      ctx.strokeStyle = slipActive ? 'rgba(244, 63, 94, 0.7)' : 'rgba(56, 189, 248, 0.65)';
+      ctx.lineWidth = 1.6;
+      for (let s = 0; s < 3; s++) {
+        ctx.rotate(Math.PI / 3);
+        ctx.beginPath();
+        ctx.moveTo(-wheelRadius + 4, 0);
+        ctx.lineTo(wheelRadius - 4, 0);
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      // Wheel Center Hub
+      ctx.beginPath();
+      ctx.arc(wheelCenterX, wheelCenterY, 5.5, 0, Math.PI * 2);
+      ctx.fillStyle = slipActive ? '#f43f5e' : '#38bdf8';
+      ctx.fill();
+
+      // Wheel Diameter Dimension Callout below ground
+      ctx.fillStyle = '#7dd3fc';
+      ctx.font = '600 10px "JetBrains Mono", monospace';
+      ctx.textAlign = 'center';
+      const activeNdrive = isCarryMode ? m.N_drive_carry : m.N_drive_tow;
+      ctx.fillText(`ØD = ${params.diameterMm} mm | N_drive = ${activeNdrive.toFixed(0)} N (${params.wDrivePct}%)`, wheelCenterX, groundY + 24);
+
+      // Force Vectors Comparison Arrows (Top Right)
+      const vecBaseX = amrX + 20;
+      const vecY1 = 26;
+      const vecY2 = 46;
+      const maxVecLen = 185;
+      const refForce = Math.max(m.F_drive, m.F_traction_max, 1);
+      const lenDrive = Math.max(25, (m.F_drive / refForce) * maxVecLen);
+      const lenTrac = Math.max(25, (m.F_traction_max / refForce) * maxVecLen);
+
+      drawArrow(vecBaseX, vecY1, vecBaseX + lenDrive, vecY1, '#38bdf8', 2.5);
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = '600 10px "JetBrains Mono", monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(`F_drive = ${m.F_drive.toFixed(1)} N`, vecBaseX + lenDrive + 8, vecY1 + 3);
+
+      const activeTracForce = isCarryMode ? (params.mus * m.N_drive_carry) : m.F_traction_max;
+      const lenActiveTrac = isCarryMode ? maxVecLen : lenTrac;
+      drawArrow(vecBaseX, vecY2, vecBaseX + lenActiveTrac, vecY2, slipActive ? '#f43f5e' : '#10b981', 2.5);
+      ctx.fillStyle = slipActive ? '#fda4af' : '#34d399';
+      ctx.fillText(`F_grip = ${activeTracForce.toFixed(1)} N`, vecBaseX + lenActiveTrac + 8, vecY2 + 3);
+
+      // Animated Skid/Slip Sparks at Contact Patch if Slip Active!
+      if (slipActive) {
+        if (Math.random() < 0.65) {
+          state.sparks.push({
+            x: wheelCenterX - 4,
+            y: groundY - 2,
+            vx: -40 - Math.random() * 80,
+            vy: -15 - Math.random() * 45,
+            life: 1.0
+          });
+        }
+        ctx.fillStyle = '#f43f5e';
+        ctx.font = '700 11px "JetBrains Mono", monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('⚠️ TIRE SLIPPING!', wheelCenterX, wheelCenterY - wheelRadius - 10);
+      }
+
+      // Update & draw sparks
+      for (let i = state.sparks.length - 1; i >= 0; i--) {
+        const sp = state.sparks[i];
+        sp.x += sp.vx * dt;
+        sp.y += sp.vy * dt;
+        sp.vy += 120 * dt;
+        sp.life -= dt * 2.4;
+        if (sp.life <= 0) {
+          state.sparks.splice(i, 1);
+          continue;
+        }
+        ctx.fillStyle = `rgba(251, 146, 60, ${sp.life.toFixed(2)})`;
+        ctx.beginPath();
+        ctx.arc(sp.x, sp.y, 2.2, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore(); // End slope transform
+
+      // Top-left Velocity & Slope HUD Overlay
+      drawRoundRect(14, 12, 215, 42, 8, 'rgba(15, 23, 42, 0.88)', '#334155', 1);
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = '700 11px "JetBrains Mono", monospace';
+      ctx.textAlign = 'left';
+      ctx.fillText(`v = ${m.vMs.toFixed(2)} m/s (${m.vMmin.toFixed(1)} m/min)`, 24, 29);
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '500 10px "JetBrains Mono", monospace';
+      ctx.fillText(`Slope θ = ${params.slopeDeg.toFixed(1)}° | Accel a = ${params.accel.toFixed(2)} m/s²`, 24, 45);
+
+      ctx.restore(); // End virtual scale transform
+
+      requestAnimationFrame(renderBlueprintFrame);
+    }
+
+    /**
+     * =========================================================================
+     * 8. RESET & REPORT CLIPBOARD EXPORT
+     * =========================================================================
+     */
+    function resetDefaults() {
+      state.selectedSeries = 'BLV-R';
+      state.selectedMotorId = 'BLVR200K';
+      state.customTorque = null;
+
+      document.getElementById('input-torque').value = '0.637';
+      document.getElementById('input-rpm').value = '3000';
+      document.getElementById('slider-rpm').value = '3000';
+      document.getElementById('input-diameter').value = '150';
+      document.getElementById('input-ratio').value = '20';
+      document.getElementById('input-efficiency').value = '85';
+      document.getElementById('input-sf').value = '1.2';
+      document.getElementById('input-amr-weight').value = '100';
+      document.getElementById('input-wdrive').value = '60';
+      document.getElementById('input-mus').value = '0.50';
+      document.getElementById('input-mu1').value = '0.015';
+      document.getElementById('input-mu2').value = '0.025';
+      document.getElementById('input-accel').value = '0.30';
+      document.getElementById('input-slope').value = '0.0';
+
+      renderMotorSelector();
+      recalculate();
+      showToast('รีเซ็ตพารามิเตอร์ทั้งหมดเป็นค่าเริ่มต้นเรียบร้อยแล้ว');
+    }
+
+    function copyReport() {
+      if (!state.latestMetrics) return;
+      const { motor, params, m } = state.latestMetrics;
+
+      const slipStatus = m.isWheelSlip
+        ? `⚠️ WHEEL SLIP WARNING (ล้อฟรีก่อนถึงแรงมอเตอร์ ต้องเพิ่มน้ำหนักถ่วงอย่างน้อย +${m.m_ballast.toFixed(1)} kg)`
+        : `✅ TRACTION SAFE (เหลือ Grip Margin +${m.gripMarginPct.toFixed(1)}%)`;
+
+      const reportLines = [
+        `=== รายงานการคำนวณระบบขับเคลื่อนรถ AMR (2-Wheel Differential Drive) ===`,
+        `มอเตอร์: Oriental Motor ${motor.model} (${motor.series} ${motor.powerW}W) × 2 ตัว`,
+        `สเปกขับเคลื่อน: Torque = ${params.torqueNm} N·m | Ratio = 1:${params.ratio} | Speed = ${params.rpm} rpm | η = ${params.efficiencyPct}% | SF = ${params.sf}`,
+        `โครงสร้างรถ & พื้นผิว: ล้อ Ø${params.diameterMm} mm | รถเปล่า = ${params.amrWeight} kg | W_drive = ${params.wDrivePct}% | μ_s = ${params.mus} | μ_r1 = ${params.mu1} | μ_r2 = ${params.mu2}`,
+        `----------------------------------------------------------------------`,
+        `• ความเร็วเชิงเส้น (Linear Speed): ${m.vMs.toFixed(2)} m/s (${m.vMmin.toFixed(1)} m/min | ${m.vKmh.toFixed(2)} km/h)`,
+        `• แรงฉุดมอเตอร์รวม (F_drive): ${m.F_drive.toFixed(1)} N | ขีดจำกัดล้อเกาะพื้น (F_traction,max): ${m.F_traction_max.toFixed(1)} N`,
+        `• สถานะการยึดเกาะล้อ: ${slipStatus}`,
+        `• Mode 1 — โหลดขนบนรถสูงสุด (Max Carrying Load): ${m.m_carry_effective.toFixed(1)} kg (Gross: ${(params.amrWeight + m.m_carry_effective).toFixed(1)} kg)`,
+        `• Mode 2 — โหลดลากจูงจริงสูงสุด (Effective Max Towing): ${m.m_tow_effective.toFixed(1)} kg (ตามมอเตอร์: ${m.m_tow_motor.toFixed(1)} kg | ตามล้อเกาะพื้น: ${m.m_tow_trac.toFixed(1)} kg)`,
+        `======================================================================`
+      ].join('\n');
+
+      const tempInput = document.createElement('textarea');
+      tempInput.value = reportLines;
+      tempInput.style.position = 'fixed';
+      tempInput.style.left = '-9999px';
+      document.body.appendChild(tempInput);
+      tempInput.select();
+      try {
+        document.execCommand('copy');
+        showToast('คัดลอกรายงานสรุปผลการคำนวณไปยังคลิปบอร์ดแล้ว');
+      } catch (e) {
+        showToast('ไม่สามารถคัดลอกอัตโนมัติได้ กรุณาลองใหม่อีกครั้ง');
+      }
+      document.body.removeChild(tempInput);
+    }
+
+    let toastTimeout = null;
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      document.getElementById('toast-message').textContent = msg;
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, 3200);
+    }
+
+    /**
+     * =========================================================================
+     * 9. INITIALIZATION ON WINDOW LOAD
+     * =========================================================================
+     */
+    window.addEventListener('resize', resizeCanvas);
+
+    window.onload = function () {
+      renderMotorSelector();
+      setCanvasMode('tow');
+      recalculate();
+      resizeCanvas();
+      requestAnimationFrame(renderBlueprintFrame);
+    };
+  </script>
+</body>
+</html>
